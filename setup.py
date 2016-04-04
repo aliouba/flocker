@@ -12,7 +12,7 @@ with open("README.rst") as readme:
     description = readme.read()
 
 with open("requirements.txt") as requirements:
-    install_requires = [req for req in requirements.readlines() if 'git+https' not in req]
+    install_requires = requirements.readlines()
 with open("dev-requirements.txt") as dev_requirements:
     dev_requires = dev_requirements.readlines()
 
@@ -98,6 +98,7 @@ setup(
     cmdclass=versioneer.get_cmdclass(),
 
     dependency_links = [
+        "git+https://github.com/ClusterHQ/pyrsistent@v0.11.12+chq1#egg=pyrsistent-0.11.12+chq1"  # noqa
     ],
 
     # Some "trove classifiers" which are relevant.
