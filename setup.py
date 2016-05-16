@@ -98,7 +98,7 @@ setup(
     cmdclass=versioneer.get_cmdclass(),
 
     dependency_links = [
-        "git+https://github.com/ClusterHQ/pyrsistent@v0.11.12+chq1#egg=pyrsistent-0.11.12+chq1"  # noqa
+        "git+https://github.com/ClusterHQ/pyrsistent@v0.11.13+chq1#egg=pyrsistent-0.11.13+chq1"  # noqa
     ],
 
     # Some "trove classifiers" which are relevant.
