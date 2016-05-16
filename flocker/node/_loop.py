@@ -47,11 +47,16 @@ from twisted.python.reflect import safe_repr
 from . import run_state_change, NoOp
 
 from ..common import gather_deferreds
+from ..common.logging import log_info
 from ..control import (
     NodeStateCommand, IConvergenceAgent, AgentAMP, SetNodeEraCommand,
     IStatePersister, SetBlockDeviceIdForDatasetId,
 )
 from ..control._persistence import to_unserialized_json
+
+# The maximum number of seconds an agent will wait before attempting to
+# reconnect to the control service.
+MAXIMUM_RECONNECT_DELAY = 30
 
 
 class ClusterStatusInputs(Names):
@@ -516,11 +521,6 @@ class ConvergenceLoop(object):
             return succeed(None)
 
     def output_CONVERGE(self, context):
-        # XXX: We stopped logging configuration and cluster state here for
-        # performance reasons.
-        # But without some limited logging it'll be difficult to debug problems
-        # all the way from a configuration change to the failed convergence
-        # operation. FLOC-4331.
         with LOG_CONVERGE(self.fsm.logger).context():
             log_discovery = LOG_DISCOVERY(self.fsm.logger)
             with log_discovery.context():
@@ -567,6 +567,10 @@ class ConvergenceLoop(object):
                 sleep_duration = _Sleep.with_jitter(
                     action.sleep.total_seconds())
             else:
+                # Log the Node configuration that we are converging upon:
+                log_info(desired_config=to_unserialized_json(
+                    self.configuration.get_node(self.deployer.node_uuid)
+                ))
                 # We're going to do some work, we should do another
                 # iteration, but chances are that if, for any reason,
                 # the backend is saturated, by looping too fast, we
@@ -754,6 +758,7 @@ class AgentLoopService(MultiService, object):
         self.reconnecting_factory = ReconnectingClientFactory.forProtocol(
             lambda: AgentAMP(self.reactor, self)
         )
+        self.reconnecting_factory.maxDelay = MAXIMUM_RECONNECT_DELAY
         self.factory = TLSMemoryBIOFactory(context_factory, True,
                                            self.reconnecting_factory)
 

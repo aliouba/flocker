@@ -4,11 +4,12 @@
 Persistence of cluster configuration.
 """
 
-from json import dumps, loads
-from uuid import UUID
+from base64 import b16encode
 from calendar import timegm
 from datetime import datetime
-from hashlib import sha256
+from json import dumps, loads
+from mmh3 import hash_bytes as mmh3_hash_bytes
+from uuid import UUID
 
 from eliot import Logger, write_traceback, MessageType, Field, ActionType
 
@@ -217,6 +218,7 @@ _BASIC_JSON_COLLECTIONS = frozenset([dict, list, tuple])
 
 
 _cached_dfs_serialize_cache = WeakKeyDictionary()
+_UNCACHED_SENTINEL = object()
 
 
 def _cached_dfs_serialize(input_object):
@@ -248,8 +250,16 @@ def _cached_dfs_serialize(input_object):
     else:
         if _is_pyrsistent(input_object):
             is_pyrsistent = True
-            if input_object in _cached_dfs_serialize_cache:
-                return _cached_dfs_serialize_cache[input_object]
+            # Using ``dict.get`` and a sentinel rather than the more pythonic
+            # try/except KeyError for performance. This function is highly
+            # recursive and the KeyError is guaranteed to happen the first
+            # time every object is serialized. We do not want to incur the cost
+            # of a caught exception for every pyrsistent object ever
+            # serialized.
+            cached_value = _cached_dfs_serialize_cache.get(input_object,
+                                                           _UNCACHED_SENTINEL)
+            if cached_value is not _UNCACHED_SENTINEL:
+                return cached_value
         obj = _to_serializables(input_object)
 
     result = obj
@@ -515,7 +525,7 @@ class ConfigurationPersistenceService(MultiService):
         """
         config = Configuration(version=_CONFIG_VERSION, deployment=deployment)
         data = wire_encode(config)
-        self._hash = sha256(data).hexdigest()
+        self._hash = b16encode(mmh3_hash_bytes(data)).lower()
         self._config_path.setContent(data)
 
     def save(self, deployment):
