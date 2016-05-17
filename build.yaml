@@ -253,6 +253,8 @@ common_cli:
     . ${venv}/bin/activate
     # Report the version of Python we're using, to aid debugging.
     ${venv}/bin/python --version
+    ${venv}/bin/pip install --upgrade pip
+    ${venv}/bin/pip --version
 
   setup_pip_cache: &setup_pip_cache |
     # exports the PIP_INDEX_URL, TRUSTED_HOST variables to the environment.
