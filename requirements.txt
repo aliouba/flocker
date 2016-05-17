@@ -1,3 +1,4 @@
+--find-link https://github.com/ClusterHQ/pyrsistent/archive/v0.11.13+chq1.zip#egg=pyrsistent-0.11.13+chq1
 pyrsistent==0.11.13+chq1
 argparse==1.3.0
 attrs==15.1.0
