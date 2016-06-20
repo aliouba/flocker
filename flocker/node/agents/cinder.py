@@ -988,10 +988,11 @@ def cinder_from_configuration(region, cluster_id, **config):
     )
 
     # Add a Cinder v1 adapter if necessary
+    """
     wrapped_cinder_volume_manager = CINDER_V1_ADAPTERS[
         cinder_client.version
     ](wrapped_cinder_volume_manager)
-
+    """
     logging_nova_volume_manager = _LoggingNovaVolumeManager(
         _nova_volumes=nova_client.volumes
     )
