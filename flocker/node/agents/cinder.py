@@ -472,7 +472,7 @@ class CinderBlockDeviceAPI(object):
             # Only do subset comparison if there were *some* IP addresses;
             # non-ACTIVE servers will have an empty list of IP addresses and
             # lead to incorrect matches.
-            if api_addresses and api_addresses.issubset(local_ips):
+            if api_addresses and len(api_addresses.intersection(local_ips)):
                 matching_instances.append(server.id)
             else:
                 for ip in api_addresses:
